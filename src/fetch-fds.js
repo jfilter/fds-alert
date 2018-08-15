@@ -4,7 +4,7 @@ const NodeCache = require("node-cache");
 const BASE_URL = "https://fragdenstaat.de/api/v1/request/";
 const PAGES = 2;
 const CACHE_DURATION = 60 * 60;
-const LIMIT = 3;
+const LIMIT = 50;
 
 const fetchIds = async jurisdiction => {
   const res = await Promise.all(
