@@ -1,0 +1,30 @@
+{
+  "name": "fds-alerts",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "docker-compose build && docker-compose up"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jfilter/fds-alerts.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jfilter/fds-alerts/issues"
+  },
+  "homepage": "https://github.com/jfilter/fds-alerts#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "got": "^9.0.0",
+    "node-cache": "^4.2.0",
+    "pg": "^7.4.3"
+  },
+  "devDependencies": {
+    "prettier": "^1.14.2"
+  }
+}
