@@ -19,10 +19,11 @@
   },
   "homepage": "https://github.com/jfilter/fds-alerts#readme",
   "dependencies": {
+    "apicache": "^1.2.3",
     "express": "^4.16.3",
+    "feed": "^2.0.1",
     "got": "^9.0.0",
-    "node-cache": "^4.2.0",
-    "pg": "^7.4.3"
+    "node-cache": "^4.2.0"
   },
   "devDependencies": {
     "prettier": "^1.14.2"

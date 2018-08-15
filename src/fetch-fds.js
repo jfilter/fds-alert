@@ -4,11 +4,13 @@ const NodeCache = require("node-cache");
 const BASE_URL = "https://fragdenstaat.de/api/v1/request/";
 const PAGES = 2;
 const CACHE_DURATION = 60 * 60;
+const LIMIT = 3;
 
-const fetchIds = async () => {
+const fetchIds = async jurisdiction => {
   const res = await Promise.all(
     [...Array(PAGES).keys()].map(async x => {
-      const url = `${BASE_URL}?limit=50&offset=${x * 50}`;
+      let url = `${BASE_URL}?limit=${LIMIT}&offset=${x * LIMIT}`;
+      if (jurisdiction != "all") url += "&jurisdiction=" + jurisdiction;
       return (await got(url, { json: true })).body.objects.map(({ id }) => id);
     })
   );
@@ -17,26 +19,39 @@ const fetchIds = async () => {
   return res.reduce((a, b) => a.concat(b), []);
 };
 
-const fetchMessages = async () => {
-  const ids = await fetchIds();
+const fetchMessages = async jurisdiction => {
+  const ids = await fetchIds(jurisdiction);
 
-  return await Promise.all(
+  const requests = await Promise.all(
     ids.map(async id => {
       const url = `${BASE_URL}${id}`;
       return (await got(url, { json: true })).body;
     })
   );
+
+  return requests
+    .map(({ messages, law: { letter_start, letter_end } }) => {
+      // remove irrelevant text
+      messages.forEach(x => {
+        x.content = x.content.replace(letter_start, "").replace(letter_end, "");
+      });
+      return messages;
+    })
+    .reduce((a, b) => a.concat(b), []);
 };
 
-const cache = new NodeCache({ stdTTL: CACHE_DURATION });
+const fetchallMessages = (() => {
+  const cache = new NodeCache({ stdTTL: CACHE_DURATION });
 
-const allMessages = async () => {
-  let msgs = cache.get("all");
-  if (msgs == null) {
-    msgs = await fetchMessages();
-    cache.set("all", msgs);
-  }
-  return msgs;
-};
+  const getFromCache = async jurisdiction => {
+    let msgs = cache.get(jurisdiction);
+    if (msgs == null) {
+      msgs = await fetchMessages(jurisdiction);
+      cache.set(jurisdiction, msgs);
+    }
+    return msgs;
+  };
+  return getFromCache;
+})();
 
-module.exports = { allMessages };
+module.exports = { fetchallMessages };
