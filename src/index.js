@@ -42,7 +42,7 @@ const preprocessPath = async path => {
 app.get("/min/*", cache("10 minutes"), async (req, res) => {
   const { msgsFilterd } = await preprocessPath(req.path.replace("/min/", "/"));
 
-  res.send(msgsFilterd.map(({ id }) => id));
+  res.json(msgsFilterd.map(({ id }) => id));
 });
 
 app.get("/*", cache("10 minutes"), async (req, res) => {
