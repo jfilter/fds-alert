@@ -46,8 +46,15 @@ const fetchallMessages = (() => {
   const getFromCache = async jurisdiction => {
     let msgs = cache.get(jurisdiction);
     if (msgs == null) {
-      msgs = await fetchMessages(jurisdiction);
-      cache.set(jurisdiction, msgs);
+      try {
+        msgs = await fetchMessages(jurisdiction);
+        cache.set(jurisdiction, msgs);
+      } catch (error) {
+        console.error("error fetching messages", error);
+        setTimeout(() => {
+          return fetchallMessages();
+        }, 5000);
+      }
     }
     return msgs;
   };
