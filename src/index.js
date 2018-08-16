@@ -15,8 +15,8 @@ const onlyRecent = dateString => {
   return new Date(dateString) > recentTime;
 };
 
-app.get("/*", cache("10 minutes"), async (req, res) => {
-  const parts = req.path.split("/").filter(x => x !== "");
+const preprocessPath = async path => {
+  const parts = path.split("/").filter(x => x !== "");
   const jurisdictionName = parts[0];
   const terms = parts.reverse()[0];
   let jurisdictionParam = "all";
@@ -30,13 +30,29 @@ app.get("/*", cache("10 minutes"), async (req, res) => {
       return;
     }
   }
-
   const msgs = await fetchallMessages(jurisdictionParam);
   const reg = new RegExp("(" + terms + ")", "ig");
   const msgsFilterd = msgs
     .filter(x => onlyRecent(x.timestamp))
     .filter(x => terms == null || (reg.test(x.content) || reg.test(x.subject)))
     .sort((a, b) => a.timestamp < b.timestamp);
+  return { jurisdictionName, jurisdictionParam, terms, msgsFilterd, reg };
+};
+
+app.get("/min/*", cache("10 minutes"), async (req, res) => {
+  const { msgsFilterd } = await preprocessPath(req.path.replace("/min/", "/"));
+
+  res.send(msgsFilterd.map(({ id }) => id));
+});
+
+app.get("/*", cache("10 minutes"), async (req, res) => {
+  const {
+    jurisdictionName,
+    jurisdictionParam,
+    terms,
+    msgsFilterd,
+    reg
+  } = await preprocessPath(req.path);
 
   // highlight matches in bold
   msgsFilterd.forEach(x => {
@@ -53,4 +69,4 @@ app.get("/*", cache("10 minutes"), async (req, res) => {
   res.send(feed);
 });
 
-app.listen(5000, () => console.log("Example app listening on port 3000!"));
+app.listen(5000);
