@@ -19,13 +19,12 @@ app.get("/*", cache("10 minutes"), async (req, res) => {
   const parts = req.path.split("/").filter(x => x !== "");
   const jurisdictionName = parts[0];
   const terms = parts.reverse()[0];
-
   let jurisdictionParam = "all";
   if (parts.length > 1) {
     const allNames = jurisdictionMapping.map(({ name }) => name);
     const index = allNames.indexOf(jurisdictionName);
     if (index >= 0) {
-      jurisdictionParam = jurisdictionMapping[jurisdictionName];
+      jurisdictionParam = jurisdictionMapping[index].id;
     } else {
       res.send("Choose from the following: " + allNames.join(" "));
       return;
@@ -33,7 +32,7 @@ app.get("/*", cache("10 minutes"), async (req, res) => {
   }
 
   const msgs = await fetchallMessages(jurisdictionParam);
-  const reg = new RegExp("(" + terms + ")", "i");
+  const reg = new RegExp("(" + terms + ")", "ig");
   const msgsFilterd = msgs
     .filter(x => onlyRecent(x.timestamp))
     .filter(x => terms == null || (reg.test(x.content) || reg.test(x.subject)))
@@ -45,8 +44,8 @@ app.get("/*", cache("10 minutes"), async (req, res) => {
   });
 
   const feed = createFeed(
-    jurisdictionParam,
     jurisdictionName,
+    jurisdictionParam,
     terms,
     msgsFilterd
   );
