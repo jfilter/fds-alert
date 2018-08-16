@@ -1,5 +1,7 @@
 const { Feed } = require("feed");
 
+const jurisdictionMapping = require("./jurisdictions.json");
+
 const createFeed = (jurisdictionName, jurisdictionParam, terms, posts) => {
   const feed = new Feed({
     title:
@@ -7,7 +9,10 @@ const createFeed = (jurisdictionName, jurisdictionParam, terms, posts) => {
       (terms != null ? ": " + terms : "") +
       (jurisdictionParam !== "all" ? " in " + jurisdictionName : ""),
 
-    description: "Anfragen auf FragDenStaat.de per Alert verfolgen",
+    description:
+      "Anfragen auf FragDenStaat.de per Stichwort verfolgen. z.B. https://fragdenstaat-alerts.app.vis.one/fahrrad. Man kann die Suche auch auf Jurisdiktionen beschränken wie z.B. https://fragdenstaat-alerts.app.vis.one/berlin/polizei. Zur Auswahl stehen: " +
+      jurisdictionMapping.map(({ name }) => name).join(", ") +
+      ".",
     id: "https://fragdenstaat-alerts.app.vis.one",
     link: "https://fragdenstaat-alerts.app.vis.one",
     generator: "npm install feed",
