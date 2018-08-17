@@ -29,15 +29,13 @@ const fetchMessages = async jurisdiction => {
     })
   );
 
-  return requests
-    .map(({ messages, law: { letter_start, letter_end } }) => {
-      // remove irrelevant text
-      messages.forEach(x => {
-        x.content = x.content.replace(letter_start, "").replace(letter_end, "");
-      });
-      return messages;
-    })
-    .reduce((a, b) => a.concat(b), []);
+  return requests.map(({ id, messages, law: { letter_start, letter_end } }) => {
+    // remove irrelevant text
+    messages.forEach(x => {
+      x.content = x.content.replace(letter_start, "").replace(letter_end, "");
+    });
+    return { id, messages };
+  });
 };
 
 const fetchallMessages = (() => {

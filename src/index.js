@@ -30,19 +30,30 @@ const preprocessPath = async path => {
       return;
     }
   }
-  const msgs = await fetchallMessages(jurisdictionParam);
+  const reqMessages = await fetchallMessages(jurisdictionParam);
   const reg = new RegExp("(" + terms + ")", "ig");
-  const msgsFilterd = msgs
-    .filter(x => onlyRecent(x.timestamp))
-    .filter(x => terms == null || (reg.test(x.content) || reg.test(x.subject)))
-    .sort((a, b) => a.timestamp < b.timestamp);
+  const reqMessagesFilterd = reqMessages.map(m => {
+    m.messages = m.messages
+      .filter(x => onlyRecent(x.timestamp))
+      .filter(
+        x => terms == null || (reg.test(x.content) || reg.test(x.subject))
+      )
+      .sort((a, b) => a.timestamp < b.timestamp);
+    return m;
+  });
+  const msgsFilterd = reqMessagesFilterd.filter(x => x.messages.length);
   return { jurisdictionName, jurisdictionParam, terms, msgsFilterd, reg };
 };
 
 app.get("/min/*", cache("10 minutes"), async (req, res) => {
   const { msgsFilterd } = await preprocessPath(req.path.replace("/min/", "/"));
-
-  res.json(msgsFilterd.map(({ id }) => id));
+  const finData = msgsFilterd.map(({ id, messages }) => {
+    return {
+      id,
+      messages: messages.map(({ id }) => id)
+    };
+  });
+  res.json(finData);
 });
 
 app.get("/*", cache("10 minutes"), async (req, res) => {
@@ -54,17 +65,16 @@ app.get("/*", cache("10 minutes"), async (req, res) => {
     reg
   } = await preprocessPath(req.path);
 
+  const onlyMsgs = msgsFilterd
+    .map(({ messages }) => messages)
+    .reduce((a, b) => a.concat(b), []);
+
   // highlight matches in bold
-  msgsFilterd.forEach(x => {
+  onlyMsgs.forEach(x => {
     x.content = x.content.replace(reg, "<b>$&</b>");
   });
 
-  const feed = createFeed(
-    jurisdictionName,
-    jurisdictionParam,
-    terms,
-    msgsFilterd
-  );
+  const feed = createFeed(jurisdictionName, jurisdictionParam, terms, onlyMsgs);
 
   res.send(feed);
 });
